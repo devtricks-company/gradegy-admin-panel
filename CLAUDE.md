@@ -14,6 +14,7 @@ Gradegy Admin Panel - A Next.js 15 admin panel application built with TypeScript
 - **Styling**: Tailwind CSS v4 with @tailwindcss/postcss
 - **Build Tool**: Turbopack (enabled by default)
 - **Linting**: ESLint 9 with next/core-web-vitals and next/typescript configs
+- **Data Fetching**: TanStack Query (React Query) v5
 
 ## Development Commands
 
@@ -38,11 +39,14 @@ Development server runs on http://localhost:3000
 ```
 src/
 ├── app/              # Next.js App Router directory
-│   ├── layout.tsx    # Root layout
+│   ├── layout.tsx    # Root layout with QueryProvider
 │   ├── page.tsx      # Home page
 │   ├── globals.css   # Global styles & Tailwind imports
 │   └── favicon.ico   # Site favicon
-└── [future dirs]     # Add components/, lib/, etc. as needed
+├── components/       # React components
+│   └── providers/    # Context providers
+│       └── query-provider.tsx  # TanStack Query provider
+└── [future dirs]     # Add lib/, hooks/, etc. as needed
 
 public/               # Static assets
 ```
@@ -73,6 +77,35 @@ public/               # Static assets
 - Turbopack enabled for both dev and build
 - Faster than webpack, especially for large projects
 - Hot Module Replacement (HMR) optimized
+
+### Data Fetching with TanStack Query
+- QueryProvider wraps the app in `src/app/layout.tsx`
+- QueryClient configured with sensible defaults:
+  - `staleTime: 60000` (1 minute) - prevents immediate refetch on client
+  - `refetchOnWindowFocus: false` - disabled for better UX
+- React Query Devtools available in development (bottom-left corner)
+- For client components, use `useQuery`, `useMutation`, etc. from `@tanstack/react-query`
+- Server Components should use native `fetch` with Next.js caching
+
+#### Example Usage
+```tsx
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+
+export function MyComponent() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['todos'],
+    queryFn: async () => {
+      const res = await fetch('/api/todos')
+      return res.json()
+    },
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  return <div>{/* render data */}</div>
+}
+```
 
 ## Key Configuration Files
 
