@@ -23,7 +23,7 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination'
 import { OrganizationsControllerFindAll200 } from '@/lib/api/generated/schemas';
-import { Search, X } from 'lucide-react'
+import { Search, X, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function OrganizationsPage() {
@@ -112,9 +112,15 @@ export default function OrganizationsPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Organizations</h1>
-        <p className="text-muted-foreground">Manage and view all organizations</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Organizations</h1>
+          <p className="text-muted-foreground">Manage and view all organizations</p>
+        </div>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Organization
+        </Button>
       </div>
 
       {/* Search Box */}
