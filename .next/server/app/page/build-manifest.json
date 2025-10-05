@@ -2,19 +2,15 @@
   "devFiles": [],
   "ampDevFiles": [],
   "polyfillFiles": [
-    "static/chunks/f4d64_next_dist_build_polyfills_polyfill-nomodule.js"
+    "static/chunks/a6dad97d9634a72d.js"
   ],
   "lowPriorityFiles": [],
   "rootMainFiles": [
-    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_19e06998._.js",
-    "static/chunks/f4d64_next_dist_compiled_react-dom_70d7baf7._.js",
-    "static/chunks/f4d64_next_dist_compiled_next-devtools_index_b44fe6ee.js",
-    "static/chunks/f4d64_next_dist_compiled_5375de09._.js",
-    "static/chunks/f4d64_next_dist_client_23cd43df._.js",
-    "static/chunks/f4d64_next_dist_c23a39cb._.js",
-    "static/chunks/f4d64_@swc_helpers_cjs_4be96562._.js",
-    "static/chunks/Desktop_new-gradegy_gradegy-admin-panel_a0ff3932._.js",
-    "static/chunks/turbopack-Desktop_new-gradegy_gradegy-admin-panel_f1c14d2f._.js"
+    "static/chunks/8d671f9b0b473531.js",
+    "static/chunks/cc927b94938d142a.js",
+    "static/chunks/f88906558611b765.js",
+    "static/chunks/102446839d3aaba2.js",
+    "static/chunks/turbopack-be510057fc053750.js"
   ],
   "pages": {},
   "ampFirstPages": []

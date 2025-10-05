@@ -6,7 +6,7 @@ export default defineConfig({
       target: 'http://localhost:5400/schema',
     },
     output: {
-      clean:true,
+      clean:false,
     
       mode: 'tags-split',
       target: 'src/lib/api/generated',
