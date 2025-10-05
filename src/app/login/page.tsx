@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthControllerLogin } from '@/lib/api/generated/auth/auth'
+import { setAuthTokens } from '@/lib/auth/token-storage'
+import { useAuth } from '@/components/providers/auth-provider'
 
 // Zod schema for login validation
 const loginSchema = z.object({
@@ -17,13 +19,31 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter()
+  const { isAuthenticated, isLoading, refetchUser } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard')
+    }
+  }, [isAuthenticated, isLoading, router])
+
   const loginMutation = useAuthControllerLogin({
     mutation: {
-      onSuccess: (data) => {
+      onSuccess: (data: any) => {
+        // Store tokens from the response
+        console.log('success',data)
+        if (data?.tokens.accessToken && data?.tokens.refreshToken) {
+          setAuthTokens({
+            accessToken: data.tokens.accessToken,
+            refreshToken: data.tokens.refreshToken,
+          })
+          // Refetch user data and update auth state
+          refetchUser()
+        }
         // Redirect to dashboard on successful login
         router.push('/dashboard')
       },
@@ -52,6 +72,23 @@ export default function LoginPage() {
         password,
       },
     })
+  }
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render login form if already authenticated (will redirect)
+  if (isAuthenticated) {
+    return null
   }
 
   return (
