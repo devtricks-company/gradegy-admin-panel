@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthControllerLogin } from '@/lib/api/generated/auth/auth'
 import { setAuthTokens } from '@/lib/auth/token-storage'
 import { useAuth } from '@/components/providers/auth-provider'
+import { isAllowedRole } from '@/lib/auth/roles'
 
 // Zod schema for login validation
 const loginSchema = z.object({
@@ -34,18 +35,27 @@ export default function LoginPage() {
   const loginMutation = useAuthControllerLogin({
     mutation: {
       onSuccess: (data: any) => {
+        // Check if user has an allowed role
+        const userRole = data?.user?.role
+
+        if (!userRole || !isAllowedRole(userRole)) {
+          setError('Access denied. Only Ultra, Super, and Admin users can access the admin panel.')
+          return
+        }
+
         // Store tokens from the response
-        console.log('success',data)
-        if (data?.tokens.accessToken && data?.tokens.refreshToken) {
+        if (data?.tokens?.accessToken && data?.tokens?.refreshToken) {
           setAuthTokens({
             accessToken: data.tokens.accessToken,
             refreshToken: data.tokens.refreshToken,
           })
           // Refetch user data and update auth state
           refetchUser()
+          // Redirect to dashboard on successful login
+          router.push('/dashboard')
+        } else {
+          setError('Invalid response from server. Please try again.')
         }
-        // Redirect to dashboard on successful login
-        router.push('/dashboard')
       },
       onError: (error: any) => {
         setError(error?.response?.data?.message || 'Invalid credentials. Please try again.')

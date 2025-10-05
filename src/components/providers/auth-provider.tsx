@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useRouter } from 'next/navigation'
 import { isAuthenticated, clearAuthTokens } from '@/lib/auth/token-storage'
 import { useAuthControllerMe } from '@/lib/api/generated/auth/auth'
+import { isAllowedRole } from '@/lib/auth/roles'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -41,9 +42,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuth(false)
       clearAuthTokens()
     } else if (user) {
-      setIsAuth(true)
+      // Check if user has an allowed role
+      const userRole = (user as any)?.role
+
+      if (userRole && isAllowedRole(userRole)) {
+        setIsAuth(true)
+      } else {
+        // User doesn't have admin privileges, logout
+        setIsAuth(false)
+        clearAuthTokens()
+        router.push('/login')
+      }
     }
-  }, [user, error])
+  }, [user, error, router])
 
   const logout = () => {
     clearAuthTokens()
