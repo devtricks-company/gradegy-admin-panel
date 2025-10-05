@@ -1,66 +1,104 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuthControllerLogin } from '@/lib/api/generated/auth/auth'
+import { setAuthTokens } from '@/lib/auth/token-storage'
+import { useAuth } from '@/components/providers/auth-provider'
+import { isAllowedRole } from '@/lib/auth/roles'
 
 // Zod schema for login validation
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 export default function LoginPage() {
   const router = useRouter()
+  const { isAuthenticated, isLoading, refetchUser } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard')
+    }
+  }, [isAuthenticated, isLoading, router])
+
+  const loginMutation = useAuthControllerLogin({
+    mutation: {
+      onSuccess: (data: any) => {
+        // Check if user has an allowed role
+        const userRole = data?.user?.role
+
+        if (!userRole || !isAllowedRole(userRole)) {
+          setError('Access denied. Only Ultra, Super, and Admin users can access the admin panel.')
+          return
+        }
+
+        // Store tokens from the response
+        if (data?.tokens?.accessToken && data?.tokens?.refreshToken) {
+          setAuthTokens({
+            accessToken: data.tokens.accessToken,
+            refreshToken: data.tokens.refreshToken,
+          })
+          // Refetch user data and update auth state
+          refetchUser()
+          // Redirect to dashboard on successful login
+          router.push('/dashboard')
+        } else {
+          setError('Invalid response from server. Please try again.')
+        }
+      },
+      onError: (error: any) => {
+        setError(error?.response?.data?.message || 'Invalid credentials. Please try again.')
+      },
+    },
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setIsLoading(true)
 
     // Validate with Zod
     const result = loginSchema.safeParse({ email, password })
 
     if (!result.success) {
       setError(result.error.issues[0].message)
-      setIsLoading(false)
       return
     }
 
-    try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+    // Call login mutation
+    loginMutation.mutate({
+      data: {
+        email,
+        password,
+      },
+    })
+  }
 
-      if (!response.ok) {
-        throw new Error('Invalid credentials')
-      }
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
-      const data = await response.json()
-
-      // Store token or session as needed
-      localStorage.setItem('authToken', data.token)
-
-      // Redirect to dashboard or home
-      router.push('/')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+  // Don't render login form if already authenticated (will redirect)
+  if (isAuthenticated) {
+    return null
   }
 
   return (
@@ -84,7 +122,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={loginMutation.isPending}
               />
             </div>
             <div className="space-y-2">
@@ -97,7 +135,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={loginMutation.isPending}
               />
             </div>
 
@@ -107,8 +145,8 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+              {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
         </CardContent>
