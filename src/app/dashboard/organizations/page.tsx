@@ -23,14 +23,81 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination'
 import { OrganizationsControllerFindAll200 } from '@/lib/api/generated/schemas';
-import { Search, X } from 'lucide-react'
+import { Search, X, Plus, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useForm } from 'react-hook-form'
+import { Label } from '@/components/ui/label'
+
+type OrganizationFormData = {
+  title: string
+  short_title: string
+  organization_type: string
+  ufcs_member: string
+  paid: string
+  reward_system: string
+  survey_system: string
+  is_active: string
+  logo?: File
+}
 
 export default function OrganizationsPage() {
   const [page, setPage] = useState(1)
   const [limit] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [open, setOpen] = useState(false)
+
+  const form = useForm<OrganizationFormData>({
+    defaultValues: {
+      title: '',
+      short_title: '',
+      organization_type: '',
+      ufcs_member: '',
+      paid: '',
+      reward_system: '',
+      survey_system: '',
+      is_active: '',
+    },
+  })
+
+  const onSubmit = (data: OrganizationFormData) => {
+    console.log('Form data:', data)
+    console.log('Selected file:', selectedFile)
+    // Add your API call here
+    setOpen(false)
+    form.reset()
+    setSelectedFile(null)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0])
+    }
+  }
 
   // Debounce search input
   useEffect(() => {
@@ -112,9 +179,230 @@ export default function OrganizationsPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Organizations</h1>
-        <p className="text-muted-foreground">Manage and view all organizations</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Organizations</h1>
+          <p className="text-muted-foreground">Manage and view all organizations</p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Organization
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add Organization</DialogTitle>
+              <DialogDescription>
+                Create a new organization by filling out the form below.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* File Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Organization Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id="logo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="cursor-pointer"
+                    />
+                    {selectedFile && (
+                      <span className="text-sm text-muted-foreground">
+                        {selectedFile.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter organization title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Short Title */}
+                <FormField
+                  control={form.control}
+                  name="short_title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Short Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter short title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Organization Type */}
+                <FormField
+                  control={form.control}
+                  name="organization_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select organization type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="university">University</SelectItem>
+                          <SelectItem value="college">College</SelectItem>
+                          <SelectItem value="school">School</SelectItem>
+                          <SelectItem value="company">Company</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* UFCS Member */}
+                  <FormField
+                    control={form.control}
+                    name="ufcs_member"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>UFCS Member</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="yes">Yes</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Paid */}
+                  <FormField
+                    control={form.control}
+                    name="paid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paid</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="yes">Yes</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Reward System */}
+                  <FormField
+                    control={form.control}
+                    name="reward_system"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reward System</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="yes">Yes</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Survey System */}
+                  <FormField
+                    control={form.control}
+                    name="survey_system"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Survey System</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="yes">Yes</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Active */}
+                <FormField
+                  control={form.control}
+                  name="is_active"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Active</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end gap-3">
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Create Organization</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search Box */}
