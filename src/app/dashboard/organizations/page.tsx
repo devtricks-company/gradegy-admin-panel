@@ -11,9 +11,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { OrganizationsControllerFindAll200 } from '@/lib/api/generated/schemas';
 
 export default function OrganizationsPage() {
-  const { data, isLoading, error } = useOrganizationsControllerFindAll()
+  const { data, isLoading, error } = useOrganizationsControllerFindAll<OrganizationsControllerFindAll200>();
+  
 
   if (isLoading) {
     return (
@@ -31,7 +33,8 @@ export default function OrganizationsPage() {
     )
   }
 
-  const organizations = data?.data || []
+  const organizations = data?.data || [];
+  console.log('organizations',organizations)
 
   return (
     <div className="p-6">
@@ -66,7 +69,7 @@ export default function OrganizationsPage() {
               organizations.map((org) => (
                 <TableRow key={org.lead_contact}>
                   <TableCell className="font-medium">{org.title}</TableCell>
-                  <TableCell>{org.short_title || '-'}</TableCell>
+                  <TableCell>{org.short_title as unknown as string || '-'}</TableCell>
                   <TableCell className="capitalize">
                     {org.organization_type?.replace('_', ' ')}
                   </TableCell>
