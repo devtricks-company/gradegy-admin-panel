@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useOrganizationsControllerFindAll } from '@/lib/api/generated/organizations/organizations'
 import {
   Table,
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import {
   Pagination,
   PaginationContent,
@@ -22,12 +23,30 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination'
 import { OrganizationsControllerFindAll200 } from '@/lib/api/generated/schemas';
+import { Search, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function OrganizationsPage() {
   const [page, setPage] = useState(1)
   const [limit] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
-  const { data, isLoading, error } = useOrganizationsControllerFindAll<OrganizationsControllerFindAll200>({ page, limit });
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setPage(1) // Reset to first page on new search
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  const { data, isLoading, error } = useOrganizationsControllerFindAll<OrganizationsControllerFindAll200>({
+    page,
+    limit,
+    ...(debouncedSearch && { search: debouncedSearch })
+  });
   
 
   if (isLoading) {
@@ -98,6 +117,35 @@ export default function OrganizationsPage() {
         <p className="text-muted-foreground">Manage and view all organizations</p>
       </div>
 
+      {/* Search Box */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search organizations by title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {debouncedSearch && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Searching for: &quot;{debouncedSearch}&quot;
+          </p>
+        )}
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableCaption>A list of all organizations in the system</TableCaption>
@@ -117,7 +165,10 @@ export default function OrganizationsPage() {
             {organizations.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="h-24 text-center">
-                  No organizations found.
+                  {debouncedSearch
+                    ? `No organizations found matching "${debouncedSearch}".`
+                    : 'No organizations found.'
+                  }
                 </TableCell>
               </TableRow>
             ) : (
