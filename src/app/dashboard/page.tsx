@@ -9,27 +9,58 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-              <p className="text-muted-foreground">
-                Welcome to the admin panel dashboard{user?.email ? `, ${user.email}` : ''}.
-              </p>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground">
+              Welcome to the admin panel{user?.email ? `, ${user.email}` : ''}
+            </p>
+          </div>
+          <Button variant="outline" onClick={logout}>
+            Logout
+          </Button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <h3 className="text-sm font-medium">Total Organizations</h3>
             </div>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">
+              Active organizations in the system
+            </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="p-6 border rounded-lg">
-              <h2 className="text-xl font-semibold mb-2">Welcome!</h2>
-              <p className="text-muted-foreground">
-                You are now authenticated and can access the dashboard.
-              </p>
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <h3 className="text-sm font-medium">Total Admins</h3>
             </div>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">
+              Active administrators
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <h3 className="text-sm font-medium">Active Users</h3>
+            </div>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">
+              Users logged in this week
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <h3 className="text-sm font-medium">System Status</h3>
+            </div>
+            <div className="text-2xl font-bold">Operational</div>
+            <p className="text-xs text-muted-foreground">
+              All systems running normally
+            </p>
           </div>
         </div>
       </div>
